@@ -1,3 +1,124 @@
+
+* DEPRECATED and merged into /xournal repo as =dmg-fork=
+  
+  scroll down for the older "xournal" readme
+
+** steps used to graft old dmg fork repo with mainline from sf.net
+
+- ref: http://bugsquash.blogspot.com/2010/03/stitching-git-histories.html
+- ref: http://ben.straubnet.net/post/939181602/git-grafting-repositories
+- ref: http://sitaramc.github.com/concepts/grafting.html
+
+=git clone git@github.com:whacked/xournal.git=
+
+file:img/post-clone.png
+
+*** add old repo as a remote:
+
+#+BEGIN_SRC sh :results output
+git remote add dmg-fork git://github.com/whacked/xournal_fork_dmg.git
+git fetch dmg-fork
+#+END_SRC
+
+the first divergence point we want is:
+=2a103f1d9c3730559d79157166faed81047debc2=.
+verify this by comparing the ChangeLog
+
+The parent should be the commit corresponding to tag =Release-0_4_2_1=, i.e.: =20813bc253d6e133a0f5606cdf86cee5910390bf=.
+
+#+BEGIN_COMMENT
+dmg's fork imports xournal cvs at version =0.4.2.1= but that is not the commit we want. The commit immediately after that moves the files from =xournal.git/xournal= to =xournal.git=; this is what we want.
+#+END_COMMENT
+
+*** create graft point
+
+#+BEGIN_SRC sh :results silent
+cat > .git/info/grafts <<CHILD-PARENT
+2a103f1d9c3730559d79157166faed81047debc2 20813bc253d6e133a0f5606cdf86cee5910390bf
+CHILD-PARENT
+#+END_SRC
+
+restart =gitk --all= and check if the graph looks ok. Now we have a graph like so:
+
+file:img/post-graft.png
+
+*** use filter-branch to make graft permanent
+    
+    *will rewrite hashes for the grafted branch*
+
+    this makes the graft permanent
+
+    =git filter-branch --tag-name-filter cat -- --all=
+    #+BEGIN_EXAMPLE
+      Rewrite 9c675c09ee4e6eaec4b84af6c013dc3b8a3cd6d0 (181/181)
+      WARNING: Ref 'refs/heads/master' is unchanged
+      Ref 'refs/remotes/dmg-fork/master' was rewritten
+      WARNING: Ref 'refs/remotes/origin/master' is unchanged
+      WARNING: Ref 'refs/remotes/origin/master' is unchanged
+      Ref 'refs/tags/pre-poppler-19' was rewritten
+      
+    #+END_EXAMPLE
+
+    file:img/post-filter-branch.png
+
+    note now that --all will show 2 branches! They actually will have different hashes
+
+    if all looks OK:
+
+    =rm -rf .git/info/grafts .git/refs/original=
+
+    now =gitk --all= looks like this:
+    
+    file:img/post-rm-rf.png
+
+    track the =dmg-fork= branch:
+
+    =git branch --set-upstream dmg-fork remotes/dmg-fork/master=
+    #+BEGIN_EXAMPLE
+    Branch dmg-fork set up to track remote branch master from dmg-fork.
+    #+END_EXAMPLE
+
+** another way to do it
+
+   from: http://ben.straubnet.net/post/939181602/git-grafting-repositories
+
+   this actually seems to be a straightfoward and painless way to do it. A quick look confirms the new branch has the same hashes as with using the =filter-branch= method.
+
+   #+BEGIN_SRC sh :eval never
+   git fast-export --all > ../export.temp.txt
+   mkdir ../export-temp-complete
+   cd ../export-temp-complete
+   git init
+   git fast-import < ../export.temp.txt
+   #+END_SRC
+
+   #+BEGIN_EXAMPLE
+     git-fast-import statistics:
+     ---------------------------------------------------------------------
+     Alloc'd objects:       5000
+     Total objects:         1401 (         6 duplicates                  )
+           blobs  :          830 (         0 duplicates        386 deltas of        812 attempts)
+           trees  :          390 (         6 duplicates        324 deltas of        362 attempts)
+           commits:          181 (         0 duplicates          0 deltas of          0 attempts)
+           tags   :            0 (         0 duplicates          0 deltas of          0 attempts)
+     Total branches:           4 (         3 loads     )
+           marks:           1024 (      1011 unique    )
+           atoms:            176
+     Memory total:          2344 KiB
+            pools:          2110 KiB
+          objects:           234 KiB
+     ---------------------------------------------------------------------
+     pack_report: getpagesize()            =       4096
+     pack_report: core.packedGitWindowSize = 1073741824
+     pack_report: core.packedGitLimit      = 8589934592
+     pack_report: pack_used_ctr            =       1463
+     pack_report: pack_mmap_calls          =        182
+     pack_report: pack_open_windows        =          1 /          1
+     pack_report: pack_mapped              =    5998700 /    5998700
+     ---------------------------------------------------------------------
+       
+   #+END_EXAMPLE
+
 * xournal
 
 is currently the *only* open source note-taking software that has top-notch annotation facilities for pdfs (and images), that works on Windows, Mac, and Linux. It is the default pdf reader on all my machines. I have tried Skim (Mac), Okular (Lin/Win/Mac), and a few others. Nothing comes close in interop, customizability, and features. Plus, your notes are stored in xoj files that are simple to edit and save and sync.
