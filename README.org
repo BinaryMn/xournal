@@ -11,7 +11,7 @@
 
 =git clone git@github.com:whacked/xournal.git=
 
-file:img/post-clone.png
+[[file:img/post-clone.png]]
 
 *** add old repo as a remote:
 
@@ -40,7 +40,7 @@ CHILD-PARENT
 
 restart =gitk --all= and check if the graph looks ok. Now we have a graph like so:
 
-file:img/post-graft.png
+[[file:img/post-graft.png]]
 
 *** use filter-branch to make graft permanent
     
@@ -59,7 +59,7 @@ file:img/post-graft.png
       
     #+END_EXAMPLE
 
-    file:img/post-filter-branch.png
+    [[file:img/post-filter-branch.png]]
 
     note now that --all will show 2 branches! They actually will have different hashes
 
@@ -69,7 +69,7 @@ file:img/post-graft.png
 
     now =gitk --all= looks like this:
     
-    file:img/post-rm-rf.png
+    [[file:img/post-rm-rf.png]]
 
     track the =dmg-fork= branch:
 
